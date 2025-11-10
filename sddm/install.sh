@@ -36,6 +36,20 @@ prompt() {
   esac
 }
 
+if [[ "$(command -v plasmashell)" ]]; then
+  PLASMA_VERSION="$(plasmashell -v | cut -d ' ' -f 2 | cut -d . -f -1)"
+  if [[ "${PLASMA_VERSION:-}" -ge "6" ]]; then
+    DESK_VERSION="6.0"
+  elif [[ "${PLASMA_VERSION:-}" -ge "5" ]]; then
+    DESK_VERSION="5.0"
+  else
+    DESK_VERSION="6.0"
+  fi
+else
+  prompt -e "'plasmashell' not found, using styles for last plasmashell version available."
+  DESK_VERSION="6.0"
+fi
+
 while [[ "$#" -gt 0 ]]; do
   case "${1:-}" in
     -t|--theme)
@@ -125,10 +139,13 @@ install() {
 
 # Checking for root access and proceed if it is present
 if [[ "$UID" -eq "$ROOT_UID" ]]; then
-  prompt -i "\n * Install Fluent${theme} in ${THEME_DIR}... "
+  prompt -i "\n * Install Fluent${theme} ${DESK_VERSION} in ${THEME_DIR}... "
   [[ -d "${THEME_DIR}/Fluent${theme}" ]] && rm -rf "${THEME_DIR}/Fluent${theme}"
-  cp -rf "${REO_DIR}/Fluent" "${THEME_DIR}/Fluent${theme}"
+  cp -rf "${REO_DIR}/Fluent-${DESK_VERSION}" "${THEME_DIR}/Fluent${theme}"
+  cp -rf "${REO_DIR}/assets" "${THEME_DIR}/Fluent${theme}"
+  cp -rf "${REO_DIR}/preview.png" "${THEME_DIR}/Fluent${theme}"
   cp -rf "${REO_DIR}/backgrounds/background${theme}.png" "${THEME_DIR}/Fluent${theme}/background.png"
+  mkdir -p "${THEME_DIR}/Fluent${theme}/faces"
   if [[ "${theme}" != '' ]]; then
     sed -i "s/#0078D4/${theme_color}/g" "${THEME_DIR}/Fluent${theme}/Login.qml"
     sed -i "s/#0078D4/${theme_color}/g" "${THEME_DIR}/Fluent${theme}/theme.conf"
